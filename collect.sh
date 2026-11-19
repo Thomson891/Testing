@@ -2,8 +2,14 @@
 # Lubuntu laaja järjestelmä-, laitteisto- ja vianmääritystietojen keräysskripti (tuottaa sysinfo.json)
 set -e
 
+if [ "$EUID" -ne 0 ]; then
+    exec sudo "$0" "$@"
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUT_FILE="$SCRIPT_DIR/sysinfo.json"
+TODAY_DATE="$(date +%F)"
+SUMMARY_FILE="$SCRIPT_DIR/summary-${TODAY_DATE}.json"
 
 echo "Kerätään järjestelmä- ja debug-tietoja kohteeseen: $OUT_FILE ..."
 
@@ -47,7 +53,7 @@ last_boots = [line.strip() for line in run("last -x reboot -n 5 2>/dev/null").sp
 
 system_info = {
     "hostname": socket.gethostname(),
-    "user": os.environ.get("USER", run("whoami")),
+    "user": os.environ.get("SUDO_USER") or os.environ.get("USER") or run("whoami"),
     "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     "os_name": os_release.get("PRETTY_NAME", platform.platform()),
     "kernel": platform.release(),
@@ -287,4 +293,38 @@ data = {
 print(json.dumps(data, ensure_ascii=False, indent=2))
 PYEOF
 
-echo "Valmis! Laajat tiedot tallennettu tiedostoon: $OUT_FILE"
+python3 - "$OUT_FILE" "$SUMMARY_FILE" << 'PYEOF'
+import json
+import sys
+from datetime import datetime
+
+out_file, summary_file = sys.argv[1], sys.argv[2]
+with open(out_file, encoding="utf-8") as f:
+    data = json.load(f)
+
+summary = {
+    "date": datetime.now().strftime("%Y-%m-%d"),
+    "last_updated": data["system"]["timestamp"],
+    "hostname": data["system"]["hostname"],
+    "uptime": data["system"]["uptime"],
+    "boot_time": data["system"]["boot_time"],
+    "load_average": data["cpu"]["load_average"],
+    "ram_percent": data["memory"]["percent"],
+    "ram_used_mb": data["memory"]["used_mb"],
+    "ram_total_mb": data["memory"]["total_mb"],
+    "thermals": data["hardware"]["thermals"],
+    "failed_services_count": len(data["debug"]["failed_services"]),
+    "failed_services": data["debug"]["failed_services"],
+    "oom_kills_count": len(data["debug"]["oom_kills"]),
+    "oom_kills": data["debug"]["oom_kills"],
+    "recent_journal_errors": data["debug"]["journal_errors"][-10:],
+    "recent_dmesg_errors": data["debug"]["dmesg_errors"][-10:],
+    "top_mem_commands": [p["command"] for p in data["processes_mem"][:5]],
+    "top_cpu_commands": [p["command"] for p in data["processes_cpu"][:5]]
+}
+
+with open(summary_file, "w", encoding="utf-8") as f:
+    json.dump(summary, f, ensure_ascii=False, indent=2)
+PYEOF
+
+echo "Valmis! Tiedot tallennettu: $OUT_FILE ja päiväyhteenveto: $SUMMARY_FILE"
