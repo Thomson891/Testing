@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lubuntu Järjestelmäraportti</title>
+    <title>Lubuntu Järjestelmä- & Diagnostiikkaraportti</title>
     <style>
         :root {
-            --bg: #0b1120;
-            --surface: #1e293b;
-            --surface-alt: #0f172a;
-            --border: #334155;
-            --text: #f8fafc;
+            --bg: #090e1a;
+            --surface: #131c2e;
+            --surface-alt: #0d1424;
+            --border: #25334d;
+            --text: #f1f5f9;
             --muted: #94a3b8;
             --accent: #38bdf8;
-            --accent-hover: #0ea5e9;
+            --accent-dim: rgba(56, 189, 248, 0.12);
             --ok: #22c55e;
+            --ok-dim: rgba(34, 197, 94, 0.12);
             --warn: #f59e0b;
+            --warn-dim: rgba(245, 158, 11, 0.12);
             --danger: #ef4444;
+            --danger-dim: rgba(239, 68, 68, 0.12);
         }
         * { box-sizing: border-box; }
         body {
@@ -28,9 +31,11 @@
             line-height: 1.5;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1320px;
             margin: 0 auto;
         }
+
+        /* Yläpalkki */
         header {
             display: flex;
             flex-wrap: wrap;
@@ -38,18 +43,35 @@
             align-items: center;
             gap: 16px;
             padding-bottom: 20px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             border-bottom: 1px solid var(--border);
         }
         .title-group h1 {
             margin: 0;
             font-size: 24px;
-            color: var(--accent);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .title-group p {
             margin: 4px 0 0 0;
             font-size: 13px;
             color: var(--muted);
+        }
+        .status-pill {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: var(--ok-dim);
+            color: var(--ok);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .status-pill.warn {
+            background: var(--danger-dim);
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.3);
         }
         .btn {
             background: var(--surface);
@@ -60,32 +82,72 @@
             font-weight: 600;
             font-size: 13px;
             cursor: pointer;
+            transition: background 0.15s;
         }
-        .btn:hover { background: #273549; }
+        .btn:hover { background: #1e293b; }
+
+        /* Yhteenvetokortit (KPI) */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .kpi-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+        }
+        .kpi-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        .kpi-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .kpi-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
 
         /* Välilehdet */
         .tabs {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 24px;
+            margin-bottom: 22px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
         }
         .tab-btn {
-            background: var(--surface);
+            background: transparent;
             color: var(--muted);
-            border: 1px solid var(--border);
-            padding: 8px 16px;
+            border: 1px solid transparent;
+            padding: 9px 16px;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .tab-btn:hover { color: var(--text); }
+        .tab-btn:hover {
+            color: var(--text);
+            background: var(--surface);
+        }
         .tab-btn.active {
-            background: var(--accent);
-            color: #0b1120;
-            border-color: var(--accent);
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-color: rgba(56, 189, 248, 0.35);
             font-weight: 600;
         }
         .tab-panel { display: none; }
@@ -94,9 +156,9 @@
         /* Ruudukko ja kortit */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 18px;
+            margin-bottom: 18px;
         }
         .card {
             background: var(--surface);
@@ -105,25 +167,32 @@
             padding: 20px;
         }
         .card.full { grid-column: 1 / -1; }
+        .card.danger-border { border-color: rgba(239, 68, 68, 0.45); }
         .card h2 {
             margin: 0 0 14px 0;
-            font-size: 16px;
+            font-size: 15px;
             color: var(--accent);
             border-bottom: 1px solid var(--border);
             padding-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 8px;
         }
+        .card.danger-border h2 { color: var(--danger); }
+
         .badge {
             font-size: 12px;
-            padding: 2px 8px;
+            padding: 2px 9px;
             border-radius: 999px;
             background: var(--surface-alt);
             color: var(--muted);
-            font-weight: normal;
+            font-weight: 600;
+            border: 1px solid var(--border);
         }
-        .badge.up { color: var(--ok); border: 1px solid rgba(34,197,94,0.3); }
+        .badge.up { color: var(--ok); background: var(--ok-dim); border-color: rgba(34,197,94,0.3); }
+        .badge.err { color: var(--danger); background: var(--danger-dim); border-color: rgba(239,68,68,0.3); }
+        .badge.warn { color: var(--warn); background: var(--warn-dim); border-color: rgba(245,158,11,0.3); }
 
         /* Avain-arvo-rivit */
         .kv-row {
@@ -132,7 +201,7 @@
             gap: 16px;
             padding: 8px 0;
             border-bottom: 1px solid rgba(255,255,255,0.05);
-            font-size: 14px;
+            font-size: 13.5px;
         }
         .kv-row:last-child { border-bottom: none; }
         .kv-label { color: var(--muted); flex-shrink: 0; }
@@ -140,10 +209,10 @@
 
         /* Edistymispalkki */
         .progress-wrap {
-            margin-top: 10px;
+            margin: 8px 0 12px 0;
             background: var(--surface-alt);
             border-radius: 999px;
-            height: 10px;
+            height: 9px;
             overflow: hidden;
             border: 1px solid var(--border);
         }
@@ -154,9 +223,7 @@
         }
 
         /* Taulukot */
-        .table-wrap {
-            overflow-x: auto;
-        }
+        .table-wrap { overflow-x: auto; }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -164,7 +231,7 @@
         }
         th, td {
             text-align: left;
-            padding: 10px 12px;
+            padding: 9px 12px;
             border-bottom: 1px solid var(--border);
         }
         th {
@@ -174,7 +241,7 @@
         }
         tr:hover td { background: rgba(255,255,255,0.02); }
 
-        /* Hakukenttä ja koodilohkot */
+        /* Hakukenttä ja lokilaatikot */
         .search-input {
             width: 100%;
             padding: 10px 14px;
@@ -183,7 +250,7 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             color: var(--text);
-            font-size: 14px;
+            font-size: 13.5px;
         }
         .search-input:focus {
             outline: none;
@@ -195,13 +262,16 @@
             border-radius: 8px;
             padding: 14px;
             font-size: 12px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             color: #cbd5e1;
             overflow-x: auto;
             margin: 0;
-            max-height: 320px;
+            max-height: 360px;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
         .error-box {
-            background: rgba(239,68,68,0.1);
+            background: var(--danger-dim);
             border: 1px solid var(--danger);
             color: #fca5a5;
             padding: 20px;
@@ -213,7 +283,10 @@
     <div class="container">
         <header>
             <div class="title-group">
-                <h1 id="page-title">Lubuntu Järjestelmäraportti</h1>
+                <h1>
+                    <span id="page-title">Lubuntu Järjestelmäraportti</span>
+                    <span id="health-pill" class="status-pill" style="display:none;"></span>
+                </h1>
                 <p id="page-subtitle">Ladataan tietoja...</p>
             </div>
             <button class="btn" onclick="location.reload()">Päivitä näkymä</button>
@@ -222,10 +295,15 @@
         <div id="error-container"></div>
 
         <div id="main-ui" style="display:none;">
+            <!-- YLÄOSAN YHTEENVETOKORTIT -->
+            <div class="kpi-grid" id="kpi-grid"></div>
+
+            <!-- VÄLILEHTIVALIKKO -->
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('overview', this)">Yleisnäkymä & Laitteisto</button>
                 <button class="tab-btn" onclick="switchTab('storage-net', this)">Levyt & Verkko</button>
-                <button class="tab-btn" onclick="switchTab('processes', this)">Prosessit & Palvelut</button>
+                <button class="tab-btn" onclick="switchTab('processes', this)">Prosessit, Palvelut & Ajastukset</button>
+                <button class="tab-btn" onclick="switchTab('debug', this)">Vikatilat & Debug <span class="badge" id="debug-tab-badge">0</span></button>
                 <button class="tab-btn" onclick="switchTab('packages', this)">Asennetut ohjelmat</button>
             </div>
 
@@ -233,16 +311,20 @@
             <div id="tab-overview" class="tab-panel active">
                 <div class="grid">
                     <div class="card">
-                        <h2>Käyttöjärjestelmä</h2>
+                        <h2>Käyttöjärjestelmä & Elinkaari</h2>
                         <div id="os-details"></div>
                     </div>
                     <div class="card">
                         <h2>Prosessori & Muisti</h2>
                         <div id="cpu-mem-details"></div>
                     </div>
-                    <div class="card full">
-                        <h2>Laitteisto (Emolevy, Näytönohjain, Liitännät)</h2>
+                    <div class="card">
+                        <h2>Laitteisto, Lämpötilat & Virta</h2>
                         <div id="hw-details"></div>
+                    </div>
+                    <div class="card">
+                        <h2>Kirjautuneet käyttäjät & Viimeisimmät käynnistykset</h2>
+                        <pre id="sessions-boots"></pre>
                     </div>
                     <div class="card">
                         <h2>USB-laitteet <span class="badge" id="usb-count">0</span></h2>
@@ -251,6 +333,11 @@
                     <div class="card">
                         <h2>PCI-laitteet <span class="badge" id="pci-count">0</span></h2>
                         <pre id="pci-list"></pre>
+                    </div>
+                    <div class="card full">
+                        <h2>Ladatut ydinmoduulit (lsmod) <span class="badge" id="mod-count">0</span></h2>
+                        <input type="text" id="mod-search" class="search-input" placeholder="Suodata ydinmoduuleja (esim. usb, net, vbox, drm)..." oninput="filterModules()">
+                        <pre id="modules-list"></pre>
                     </div>
                 </div>
             </div>
@@ -277,12 +364,16 @@
                             </table>
                         </div>
                     </div>
-                    <div class="card full">
+                    <div class="card">
                         <h2>Lohkolaitteet (lsblk)</h2>
                         <pre id="lsblk-output"></pre>
                     </div>
                     <div class="card">
-                        <h2>Verkkoliitännät</h2>
+                        <h2>Inode-käyttö (tiedostopaikat)</h2>
+                        <pre id="inodes-output"></pre>
+                    </div>
+                    <div class="card">
+                        <h2>Verkkoliitännät & Asetukset</h2>
                         <div class="table-wrap">
                             <table>
                                 <thead>
@@ -298,44 +389,98 @@
                         <div id="net-extra" style="margin-top: 14px;"></div>
                     </div>
                     <div class="card">
-                        <h2>Kuuntelevat verkkoportit</h2>
+                        <h2>Reititystaulu & Palomuuri (UFW)</h2>
+                        <pre id="route-ufw-output"></pre>
+                    </div>
+                    <div class="card full">
+                        <h2>Kuuntelevat verkkoportit (ss -tulnp)</h2>
                         <pre id="ports-list"></pre>
                     </div>
                 </div>
             </div>
 
-            <!-- VÄLILEHTI 3: PROSESSIT & PALVELUT -->
+            <!-- VÄLILEHTI 3: PROSESSIT, PALVELUT & AJASTUKSET -->
             <div id="tab-processes" class="tab-panel">
                 <div class="grid">
                     <div class="card full">
-                        <h2>Eniten muistia käyttävät prosessit (Top 15)</h2>
+                        <h2>Eniten muistia käyttävät prosessit (Top 20)</h2>
                         <div class="table-wrap">
                             <table>
                                 <thead>
                                     <tr>
                                         <th>PID</th>
                                         <th>Käyttäjä</th>
+                                        <th>Tila</th>
                                         <th>CPU %</th>
                                         <th>RAM %</th>
                                         <th>Komento</th>
                                     </tr>
                                 </thead>
-                                <tbody id="processes-table"></tbody>
+                                <tbody id="processes-mem-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card full">
+                        <h2>Eniten suoritinta käyttävät prosessit (Top 10)</h2>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>PID</th>
+                                        <th>Käyttäjä</th>
+                                        <th>Tila</th>
+                                        <th>CPU %</th>
+                                        <th>RAM %</th>
+                                        <th>Komento</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="processes-cpu-table"></tbody>
                             </table>
                         </div>
                     </div>
                     <div class="card">
-                        <h2>Käynnissä olevat taustapalvelut <span class="badge" id="srv-count">0</span></h2>
+                        <h2>Käynnissä olevat palvelut <span class="badge" id="srv-count">0</span></h2>
+                        <input type="text" id="srv-search" class="search-input" placeholder="Suodata palveluita..." oninput="filterServices()">
                         <pre id="services-list"></pre>
                     </div>
                     <div class="card">
-                        <h2>Viimeisimmät järjestelmävirheet (journalctl)</h2>
-                        <pre id="errors-list"></pre>
+                        <h2>Ajastetut tehtävät (Systemd Timers & Cron)</h2>
+                        <pre id="timers-cron-list"></pre>
                     </div>
                 </div>
             </div>
 
-            <!-- VÄLILEHTI 4: ASENNETUT OHJELMAT -->
+            <!-- VÄLILEHTI 4: VIKATILAT & DEBUG -->
+            <div id="tab-debug" class="tab-panel">
+                <div class="grid">
+                    <div class="card full" id="failed-card">
+                        <h2>Epäonnistuneet palvelut (systemctl --failed) <span class="badge" id="failed-count">0</span></h2>
+                        <pre id="failed-services-list"></pre>
+                    </div>
+                    <div class="card full">
+                        <h2>Muistin loppumisen merkinnät (OOM Killer / dmesg) <span class="badge" id="oom-count">0</span></h2>
+                        <pre id="oom-list"></pre>
+                    </div>
+                    <div class="card full">
+                        <h2>Suodata kaikkia debug-lokeja hakusanalla</h2>
+                        <input type="text" id="debug-search" class="search-input" placeholder="Hae virheistä ja varoituksista (esim. network, usb, error, fail, disk, python)..." oninput="filterDebugLogs()">
+                    </div>
+                    <div class="card full">
+                        <h2>Järjestelmävirheet (journalctl -p err..emerg) <span class="badge err" id="jerr-count">0</span></h2>
+                        <pre id="journal-errors-list"></pre>
+                    </div>
+                    <div class="card full">
+                        <h2>Ytimen ja laitteiston virheet & varoitukset (dmesg) <span class="badge warn" id="dmesg-count">0</span></h2>
+                        <pre id="dmesg-errors-list"></pre>
+                    </div>
+                    <div class="card full">
+                        <h2>Järjestelmävaroitukset (journalctl -p warning) <span class="badge warn" id="jwarn-count">0</span></h2>
+                        <pre id="journal-warnings-list"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VÄLILEHTI 5: ASENNETUT OHJELMAT -->
             <div id="tab-packages" class="tab-panel">
                 <div class="card full">
                     <h2>Asennetut APT-paketit <span class="badge" id="pkg-count">0</span></h2>
@@ -359,6 +504,13 @@
 
     <script>
         let allPackages = [];
+        let allServices = [];
+        let allModules = [];
+        let debugData = {
+            journal_errors: [],
+            dmesg_errors: [],
+            journal_warnings: []
+        };
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -388,10 +540,43 @@
 
         function filterPackages() {
             const q = document.getElementById('pkg-search').value.toLowerCase();
-            const filtered = allPackages.filter(p =>
-                p.name.toLowerCase().includes(q) || p.version.toLowerCase().includes(q)
-            );
-            renderPackages(filtered);
+            renderPackages(allPackages.filter(p => p.name.toLowerCase().includes(q) || p.version.toLowerCase().includes(q)));
+        }
+
+        function filterServices() {
+            const q = document.getElementById('srv-search').value.toLowerCase();
+            const filtered = allServices.filter(s => s.toLowerCase().includes(q));
+            document.getElementById('services-list').textContent = filtered.join('\n') || 'Ei osumia';
+        }
+
+        function filterModules() {
+            const q = document.getElementById('mod-search').value.toLowerCase();
+            const filtered = allModules.filter(m => m.toLowerCase().includes(q));
+            document.getElementById('modules-list').textContent = filtered.join(', ') || 'Ei osumia';
+        }
+
+        function filterDebugLogs() {
+            const q = document.getElementById('debug-search').value.toLowerCase();
+            const fJerr = debugData.journal_errors.filter(l => l.toLowerCase().includes(q));
+            const fDmesg = debugData.dmesg_errors.filter(l => l.toLowerCase().includes(q));
+            const fJwarn = debugData.journal_warnings.filter(l => l.toLowerCase().includes(q));
+
+            document.getElementById('journal-errors-list').textContent = fJerr.join('\n') || 'Ei osumia';
+            document.getElementById('dmesg-errors-list').textContent = fDmesg.join('\n') || 'Ei osumia';
+            document.getElementById('journal-warnings-list').textContent = fJwarn.join('\n') || 'Ei osumia';
+        }
+
+        function renderProcRows(list) {
+            return list.map(p => `
+                <tr>
+                    <td>${p.pid}</td>
+                    <td>${p.user}</td>
+                    <td><span class="badge">${p.state}</span></td>
+                    <td>${p.cpu}%</td>
+                    <td>${p.mem}%</td>
+                    <td><strong>${p.command}</strong></td>
+                </tr>
+            `).join('');
         }
 
         fetch('sysinfo.json?t=' + Date.now())
@@ -402,37 +587,98 @@
             .then(data => {
                 document.getElementById('main-ui').style.display = 'block';
                 document.getElementById('page-title').textContent = `Lubuntu: ${data.system.hostname}`;
-                document.getElementById('page-subtitle').textContent = `Tiedot kerätty: ${data.system.timestamp} • Käyttäjä: ${data.system.user}`;
+                document.getElementById('page-subtitle').textContent = `Tiedot kerätty: ${data.system.timestamp} • Käyttäjä: ${data.system.user} • Käynnistetty: ${data.system.boot_time}`;
 
+                // Vikatilojen yhteenveto
+                const failedCount = data.debug.failed_services.length;
+                const jerrCount = data.debug.journal_errors.length;
+                const oomCount = data.debug.oom_kills.length;
+                const totalIssues = failedCount + jerrCount + oomCount;
+
+                const pill = document.getElementById('health-pill');
+                pill.style.display = 'inline-block';
+                if (failedCount > 0 || oomCount > 0) {
+                    pill.className = 'status-pill warn';
+                    pill.textContent = `Huomioita: ${failedCount} kaatunutta palvelua, ${jerrCount} lokivirhettä`;
+                } else {
+                    pill.className = 'status-pill';
+                    pill.textContent = `Palvelut kunnossa (${jerrCount} lokivirhettä)`;
+                }
+
+                const debugBadge = document.getElementById('debug-tab-badge');
+                debugBadge.textContent = totalIssues;
+                if (failedCount > 0 || oomCount > 0) debugBadge.classList.add('err');
+
+                // KPI-kortit
+                const rootDisk = data.disks.find(d => d.mount === '/') || data.disks[0] || { percent: '-', used: '-', size: '-' };
+                document.getElementById('kpi-grid').innerHTML = `
+                    <div class="kpi-card">
+                        <div class="kpi-label">Keskusmuisti (RAM)</div>
+                        <div class="kpi-value">${data.memory.percent}%</div>
+                        <div class="kpi-sub">${data.memory.used_mb} / ${data.memory.total_mb} MB käytössä</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Päälevy (${rootDisk.mount || '/'})</div>
+                        <div class="kpi-value">${rootDisk.percent}%</div>
+                        <div class="kpi-sub">${rootDisk.used} / ${rootDisk.size} käytetty</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Käynnissäoloaika</div>
+                        <div class="kpi-value">${data.system.uptime}</div>
+                        <div class="kpi-sub">Kuorma: ${data.cpu.load_average}</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Palvelut & Paketit</div>
+                        <div class="kpi-value">${data.services.length} palvelua</div>
+                        <div class="kpi-sub">${data.packages.length} asennettua pakettia</div>
+                    </div>
+                `;
+
+                // 1. Käyttöjärjestelmä
                 document.getElementById('os-details').innerHTML =
                     kvRow('Käyttöjärjestelmä', data.system.os_name) +
                     kvRow('Ydin (Kernel)', data.system.kernel) +
                     kvRow('Arkkitehtuuri', data.system.architecture) +
                     kvRow('Työpöytäympäristö', data.system.desktop_env) +
-                    kvRow('Käynnissäoloaika', data.system.uptime);
+                    kvRow('Käynnistysaika', data.system.boot_time) +
+                    kvRow('Käynnistyksen kesto', data.system.boot_analyze);
 
+                // 2. CPU & RAM
                 const ramColor = data.memory.percent > 85 ? 'var(--danger)' : (data.memory.percent > 65 ? 'var(--warn)' : 'var(--accent)');
                 document.getElementById('cpu-mem-details').innerHTML =
                     kvRow('Prosessori', data.cpu.model) +
                     kvRow('Ytimet / Kellotaajuus', `${data.cpu.cores} ydintä ${data.cpu.frequency ? '(' + data.cpu.frequency + ')' : ''}`) +
-                    kvRow('Kuormitus (Load avg)', data.cpu.load_average) +
+                    kvRow('Kuormitus (1 / 5 / 15 min)', data.cpu.load_average) +
                     kvRow('Keskusmuisti (RAM)', `${data.memory.used_mb} MB / ${data.memory.total_mb} MB (${data.memory.percent}%)`) +
                     `<div class="progress-wrap"><div class="progress-bar" style="width:${data.memory.percent}%; background:${ramColor};"></div></div>` +
+                    kvRow('Vapaa / Saatavilla RAM', `${data.memory.available_mb} MB`) +
                     kvRow('Swap-muisti', `${data.memory.swap_used_mb} MB / ${data.memory.swap_total_mb} MB`);
 
+                // 3. Laitteisto & Lämpötilat
                 document.getElementById('hw-details').innerHTML =
                     kvRow('Emolevy / Laite', data.hardware.motherboard) +
                     kvRow('BIOS-versio', data.hardware.bios) +
-                    kvRow('Näytönohjain', data.hardware.gpu);
+                    kvRow('Näytönohjain', data.hardware.gpu) +
+                    kvRow('Lämpötilat', data.hardware.thermals.join(' | ')) +
+                    kvRow('Virtalähde / Akku', data.hardware.power.join(' | '));
+
+                document.getElementById('sessions-boots').textContent =
+                    "=== KIRJAUTUNEET KÄYTTÄJÄT ===\n" +
+                    (data.system.logged_in_users.join('\n') || "Ei aktiivisia istuntoja") +
+                    "\n\n=== VIIMEISIMMÄT KÄYNNISTYKSET ===\n" +
+                    (data.system.last_boots.join('\n') || "Ei merkintöjä");
 
                 document.getElementById('usb-count').textContent = data.hardware.usb_devices.length;
-                document.getElementById('usb-list').textContent = data.hardware.usb_devices.join('
-') || 'Ei USB-laitteita';
+                document.getElementById('usb-list').textContent = data.hardware.usb_devices.join('\n') || 'Ei USB-laitteita';
 
                 document.getElementById('pci-count').textContent = data.hardware.pci_devices.length;
-                document.getElementById('pci-list').textContent = data.hardware.pci_devices.join('
-') || 'Ei PCI-laitteita';
+                document.getElementById('pci-list').textContent = data.hardware.pci_devices.join('\n') || 'Ei PCI-laitteita';
 
+                allModules = data.hardware.kernel_modules || [];
+                document.getElementById('mod-count').textContent = allModules.length;
+                document.getElementById('modules-list').textContent = allModules.join(', ') || 'Ei tietoja';
+
+                // 4. Levyt & Verkko
                 document.getElementById('disks-table').innerHTML = data.disks.map(d => `
                     <tr>
                         <td><strong>${d.device}</strong></td>
@@ -445,6 +691,7 @@
                     </tr>
                 `).join('');
                 document.getElementById('lsblk-output').textContent = data.block_devices;
+                document.getElementById('inodes-output').textContent = data.inodes || 'Ei tietoja';
 
                 document.getElementById('net-interfaces-table').innerHTML = data.network.interfaces.map(i => `
                     <tr>
@@ -456,25 +703,57 @@
                 document.getElementById('net-extra').innerHTML =
                     kvRow('Oletusyhdyskäytävä', data.network.gateway) +
                     kvRow('DNS-palvelimet', data.network.dns.join(', ') || 'Ei määritetty');
-                document.getElementById('ports-list').textContent = data.network.listening_ports.join('
-') || 'Ei avoimia portteja';
 
-                document.getElementById('processes-table').innerHTML = data.processes.map(p => `
-                    <tr>
-                        <td>${p.pid}</td>
-                        <td>${p.user}</td>
-                        <td>${p.cpu}%</td>
-                        <td>${p.mem}%</td>
-                        <td><strong>${p.command}</strong></td>
-                    </tr>
-                `).join('');
-                document.getElementById('srv-count').textContent = data.services.length;
-                document.getElementById('services-list').textContent = data.services.join('
-') || 'Ei palveluita';
-                document.getElementById('errors-list').textContent = data.recent_errors.join('
-') || 'Ei viimeaikaisia virheitä lokissa';
+                document.getElementById('route-ufw-output').textContent =
+                    "=== PALOMUURI (UFW) ===\n" + data.network.ufw_status +
+                    "\n\n=== REITITYSTAULU ===\n" + (data.network.routing_table || "Ei reittejä");
 
-                allPackages = data.packages;
+                document.getElementById('ports-list').textContent = data.network.listening_ports.join('\n') || 'Ei avoimia portteja';
+
+                // 5. Prosessit, Palvelut & Ajastukset
+                document.getElementById('processes-mem-table').innerHTML = renderProcRows(data.processes_mem || []);
+                document.getElementById('processes-cpu-table').innerHTML = renderProcRows(data.processes_cpu || []);
+
+                allServices = data.services || [];
+                document.getElementById('srv-count').textContent = allServices.length;
+                document.getElementById('services-list').textContent = allServices.join('\n') || 'Ei palveluita';
+
+                document.getElementById('timers-cron-list').textContent =
+                    "=== SYSTEMD TIMERS ===\n" +
+                    (data.debug.systemd_timers.join('\n') || "Ei ajastimia") +
+                    "\n\n=== KÄYTTÄJÄN CRONTAB ===\n" +
+                    data.debug.user_crontab +
+                    "\n\n=== JÄRJESTELMÄN CRON-TIEDOSTOT ===\n" +
+                    (data.debug.system_cron || "Ei tiedostoja");
+
+                // 6. Vikatilat & Debug
+                document.getElementById('failed-count').textContent = failedCount;
+                if (failedCount > 0) {
+                    document.getElementById('failed-card').classList.add('danger-border');
+                    document.getElementById('failed-count').classList.add('err');
+                }
+                document.getElementById('failed-services-list').textContent =
+                    data.debug.failed_services.join('\n') || 'Ei epäonnistuneita palveluita (kaikki kunnossa).';
+
+                document.getElementById('oom-count').textContent = oomCount;
+                if (oomCount > 0) document.getElementById('oom-count').classList.add('err');
+                document.getElementById('oom-list').textContent =
+                    data.debug.oom_kills.join('\n') || 'Ei muistin loppumisesta johtuvia prosessien kaatoja.';
+
+                debugData.journal_errors = data.debug.journal_errors || [];
+                debugData.dmesg_errors = data.debug.dmesg_errors || [];
+                debugData.journal_warnings = data.debug.journal_warnings || [];
+
+                document.getElementById('jerr-count').textContent = debugData.journal_errors.length;
+                document.getElementById('dmesg-count').textContent = debugData.dmesg_errors.length;
+                document.getElementById('jwarn-count').textContent = debugData.journal_warnings.length;
+
+                document.getElementById('journal-errors-list').textContent = debugData.journal_errors.join('\n') || 'Ei virheitä lokissa.';
+                document.getElementById('dmesg-errors-list').textContent = debugData.dmesg_errors.join('\n') || 'Ei ytimen virheitä tai varoituksia (huom. osa vaatii sudo-oikeuden).';
+                document.getElementById('journal-warnings-list').textContent = debugData.journal_warnings.join('\n') || 'Ei varoituksia lokissa.';
+
+                // 7. Paketit
+                allPackages = data.packages || [];
                 document.getElementById('pkg-count').textContent = allPackages.length;
                 renderPackages(allPackages);
             })
