@@ -72,7 +72,7 @@ if os.path.exists("/proc/cpuinfo"):
             if "cpu MHz" in line and not cpu_mhz:
                 cpu_mhz = f"{float(line.split(':', 1)[1].strip()):.0f} MHz"
 
-load_avg = run("cat /proc/loadavg | awk '{print $1", "$2", "$3}'")
+load_avg = run("cat /proc/loadavg | awk '{print $1, $2, $3}'")
 
 cpu_info = {
     "model": cpu_model,
